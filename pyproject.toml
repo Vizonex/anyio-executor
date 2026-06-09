@@ -1,7 +1,7 @@
 [project]
 name = "anyio-executor"
 dynamic = ["version"]
-description = "Add your description here"
+description = "anyio implementation of an asynchronous Executor."
 readme = "README.md"
 authors = [
     { name = "Vizonex", email = "VizonexBusiness@gmail.com" }
@@ -14,8 +14,13 @@ dependencies = [
 [build-system]
 requires = ["setuptools"]
 
+
 [project.optional-dependencies]
 test = ["pytest"]
+
+[project.urls]
+    repository = "https://github.com/Vizonex/anyio-executor.git"
+
 
 [tool.setuptools.dynamic]
 version = {attr = "anyio_executor.__version__"}
