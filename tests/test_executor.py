@@ -1,4 +1,3 @@
-
 import anyio
 import pytest
 
@@ -8,29 +7,32 @@ from anyio_executor.core import Executor
 async def noop(*args):
     return
 
+
 async def fast_ret(i: int) -> int:
     return i
+
 
 class BaseExecutorTest:
     def executor(self) -> Executor:
         return Executor()
-    
+
+
 class TestInvalidStates(BaseExecutorTest):
     @pytest.mark.anyio
     async def test_invalid_worker_amount(self):
         with pytest.raises(ValueError, match="num_wokers must be a positive integer"):
             _ = Executor(-69)
-    
+
     @pytest.mark.anyio
     async def test_bad_map_before_entrance(self):
         e = self.executor()
         with pytest.raises(RuntimeError, match="Executor already closed."):
-            await e.map(noop, [1,2,3])
+            await e.map(noop, [1, 2, 3])
 
     @pytest.mark.anyio
     async def test_bad_amap_before_entrance(self):
         e = self.executor()
-     
+
         async def fake_aiter():
             for i in range(3):
                 yield i
@@ -38,13 +40,12 @@ class TestInvalidStates(BaseExecutorTest):
         with pytest.raises(RuntimeError, match="Executor already closed."):
             await e.amap(noop, fake_aiter())
 
-
     @pytest.mark.anyio
     async def test_bad_map_after_shutdown(self):
         async with self.executor() as e:
             await e.shutdown()
             with pytest.raises(RuntimeError, match="Executor already closed."):
-                await e.map(noop, [1,2,3])
+                await e.map(noop, [1, 2, 3])
 
     @pytest.mark.anyio
     async def test_bad_amap_after_shutdown(self):
@@ -58,12 +59,12 @@ class TestInvalidStates(BaseExecutorTest):
             with pytest.raises(RuntimeError, match="Executor already closed."):
                 await e.amap(noop, fake_aiter())
 
-class TestExecutor(BaseExecutorTest):
 
+class TestExecutor(BaseExecutorTest):
     async def wait(self, item: int) -> int:
         await anyio.sleep(item / 1000)
         return item
-    
+
     @pytest.mark.anyio
     async def test_map_await(self):
         async with self.executor() as e:

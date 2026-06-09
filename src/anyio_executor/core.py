@@ -57,6 +57,7 @@ class _WorkItem(Generic[T]):
 class ExecutorResult(Awaitable[list[T]], AsyncIterable[T]):
     """used for waiting upon results to return in different asynchronous
     fashions."""
+
     queue: SimpleQueue[T]
     count: CountdownEvent
     executor: "Executor"
@@ -70,7 +71,6 @@ class ExecutorResult(Awaitable[list[T]], AsyncIterable[T]):
             if bool(self.count):
                 break
 
-
     async def __wait__(self) -> list[T]:
         return [i async for i in self]
 
@@ -80,9 +80,11 @@ class ExecutorResult(Awaitable[list[T]], AsyncIterable[T]):
 
 # inspired by aiolibs_executor.
 
+
 @final
 class Executor:
     """A small, yet effective and efficient asynchronous executor object."""
+
     __slots__ = (
         "__weakref__",
         "_num_workers",
@@ -97,13 +99,21 @@ class Executor:
         num_workers: int = 0,
         exc_handler: Callable[[BaseException], None] | None = None,
     ) -> None:
+        """
+        :param num_workers:
+            A number of worker tasks to provide defaults to 16.
+        :param exc_handler:
+            An optional exception handler to call if a function
+            executed or submitted fails.
+        """
+
         if num_workers < 0:
             raise ValueError("num_wokers must be a positive integer")
         if num_workers == 0:
             num_workers = 16
 
         self._num_workers = num_workers
-        self._work_queue = SimpleQueue[_WorkItem[T] | None]()
+        self._work_queue: SimpleQueue[_WorkItem[T] | None] = SimpleQueue()
         self._exc_handler = exc_handler
         self._tg = anyio.create_task_group()
         self._workers_done = CountdownEvent()
@@ -161,7 +171,6 @@ class Executor:
         # can't be shut down before results come in.
         counter.down()
 
-        
     async def _load_tasks_async_iter(
         self,
         queue: SimpleQueue[T],
@@ -173,10 +182,9 @@ class Executor:
         *its: AsyncIterable[Any],
     ) -> None:
         # A Custom azip object was made just for asynchronous packing.
-        # It even has an unused feature for diagnosing using strict 
+        # It even has an unused feature for diagnosing using strict
         # (remains unused).
 
-        
         async for args in azip(it, *its, strict=False):
             counter.up()
             await self._work_queue.async_put(
@@ -252,15 +260,19 @@ class Executor:
         *its: Iterable[Any] | Sequence[Any],
         exc_handler: Callable[[BaseException], None] | None = None,
     ) -> ExecutorResult[R]:
-        """executes an asynchronous function concurrently with 
+        """Executes an asynchronous function concurrently with
         synchronous iterables to use.
-        :param func: the function to run.
-        :param exc_handler: provides an alternative solution
+
+        :param func: The function to run.
+        :param exc_handler: Provides an alternative solution
             for handling given exceptions, if not selected
             for this function will back off to whatever
             the executor class has provided and if that
-            is not the case then the exception will 
-            be raised. 
+            is not the case then the exception will
+            be raised.
+
+        :raise RuntimeError:
+            If executor has been previously shut down.
         """
         if self.is_closed:
             raise RuntimeError("Executor already closed.")
@@ -346,6 +358,21 @@ class Executor:
         *its: AsyncIterable[Any],
         exc_handler: Callable[[BaseException], None] | None = None,
     ) -> ExecutorResult[R]:
+        """
+        Executes an asynchronous function concurrently with
+        asynchronous iterables to use.
+
+        :param func: The function to run.
+        :param exc_handler: Provides an alternative solution
+            for handling given exceptions, if not selected
+            for this function will back off to whatever
+            the executor class has provided and if that
+            is not the case then the exception will
+            be raised.
+
+        :raise RuntimeError:
+            If executor has been previously shut down.
+        """
         if self.is_closed:
             raise RuntimeError("Executor already closed.")
 
