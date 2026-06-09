@@ -1,0 +1,28 @@
+[project]
+name = "anyio-executor"
+dynamic = ["version"]
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Vizonex", email = "VizonexBusiness@gmail.com" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "aiologic>=0.16.0",
+    "anyio>=4.13.0",
+]
+[build-system]
+requires = ["setuptools"]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools.dynamic]
+version = {attr = "anyio_executor.__version__"}
+
+[tool.ruff.lint]
+select = ["E", "I", "UP", "ASYNC"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+lines-after-imports = 2
