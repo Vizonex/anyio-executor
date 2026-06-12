@@ -17,6 +17,12 @@ requires = ["setuptools"]
 
 [project.optional-dependencies]
 test = ["pytest"]
+test-advanced = [
+    'uvloop; platform_system != "Windows"',
+    'winloop; platform_system == "Windows"',
+    'trio',
+    'pytest',
+]
 
 [project.urls]
     repository = "https://github.com/Vizonex/anyio-executor.git"
