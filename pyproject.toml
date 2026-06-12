@@ -32,7 +32,7 @@ test-advanced = [
 version = {attr = "anyio_executor.__version__"}
 
 [tool.ruff.lint]
-select = ["E", "I", "UP", "ASYNC"]
+select = ["E", "I", "UP", "ASYNC", "F", "RUF"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true

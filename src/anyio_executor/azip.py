@@ -1,12 +1,6 @@
-import sys
 from collections.abc import AsyncIterable, AsyncIterator
-from typing import Any, Generic, TypeVar, overload
+from typing import Any, TypeVar, overload
 
-
-if sys.version_info < (3, 11):
-    from typing_extensions import Self
-else:
-    from typing import Self
 
 # There are other asynchronous azip libraries out there
 # but the maitnence of those can be questioned so here's
