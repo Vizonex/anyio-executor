@@ -87,10 +87,10 @@ class Executor:
 
     __slots__ = (
         "__weakref__",
-        "_num_workers",
-        "_work_queue",
         "_exc_handler",
+        "_num_workers",
         "_tg",
+        "_work_queue",
         "_workers_done",
     )
 
