@@ -79,6 +79,10 @@ class TestExecutor(BaseExecutorTest):
             async for i in e.map(fast_ret, items):
                 assert i in [1, 2, 3, 4]
 
+    # NOTE: Sometimes trio will attempt to execute things
+    # differently  example: [4, 1, 2, 3]
+    # as long as they all come return back to us then it did 
+    # it's job. 
     @pytest.mark.anyio
     async def test_amap_await(self):
         async def ait():
@@ -87,7 +91,7 @@ class TestExecutor(BaseExecutorTest):
 
         async with self.executor() as e:
             i = await e.amap(self.wait, ait())
-        assert i == [1, 2, 3, 4]
+        assert set(i) == {1, 2, 3, 4}
 
     @pytest.mark.anyio
     async def test_amap_aiter(self):

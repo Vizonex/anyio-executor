@@ -37,7 +37,7 @@ T4 = TypeVar("T4")
 T5 = TypeVar("T5")
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class _WorkItem(Generic[T]):
     func: Callable[[], Awaitable[T]]
     exc_handler: Callable[[BaseException], None] | None
@@ -53,7 +53,7 @@ class _WorkItem(Generic[T]):
                 raise e
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class ExecutorResult(Awaitable[list[T]], AsyncIterable[T]):
     """used for waiting upon results to return in different asynchronous
     fashions."""
