@@ -70,7 +70,9 @@ class TestExecutor(BaseExecutorTest):
         async with self.executor() as e:
             items = [i for i in range(1, 5)]
             i = await e.map(self.wait, items)
-        assert i == [1, 2, 3, 4]
+        # it doesn't matter what order they come back 
+        # in (as long as they all come back of course)
+        assert set(i) == {1, 2, 3, 4}
 
     @pytest.mark.anyio
     async def test_map_aiter(self):
