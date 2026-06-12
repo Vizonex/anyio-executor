@@ -5,7 +5,7 @@ on:
     types: [published]
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 jobs:
@@ -25,9 +25,10 @@ jobs:
       run: python -m build
     - name: Publish package
       uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b
-      with:
-        user: __token__
-        # NOTE: Changed to how I usually got about this. 
-        # I will remove after first release is taken care of...
-        password: ${{ secrets.PYPI_API_TOKEN }}
+      # This should work with trusted publishing now...
+      # with:
+      #   user: __token__
+      #   # NOTE: Changed to how I usually got about this. 
+      #   # I will remove after first release is taken care of...
+      #   password: ${{ secrets.PYPI_API_TOKEN }}
     
