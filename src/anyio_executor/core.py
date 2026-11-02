@@ -7,14 +7,13 @@ from collections.abc import (
     Coroutine,
     Generator,
     Iterable,
-    Iterator,
     Sequence,
 )
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import partial
 from types import TracebackType
-from typing import Any, Generic, TypeVar, final, overload
+from typing import Any, Generic, Self, TypeVar, final, overload
 
 import anyio
 from aiologic import CountdownEvent, SimpleQueue
@@ -22,11 +21,8 @@ from aiologic import CountdownEvent, SimpleQueue
 from .azip import azip
 
 
-if sys.version_info < (3, 11):
-    from typing_extensions import Self
-else:
-    from typing import Self
-
+if sys.version_info < (3, 15):
+    from typing_extensions import Sentinel as sentinel
 
 R = TypeVar("R")
 T = TypeVar("T")
@@ -36,12 +32,15 @@ T3 = TypeVar("T3")
 T4 = TypeVar("T4")
 T5 = TypeVar("T5")
 
+MISSING = sentinel("MISSING")
+"""Internal variable not meant to be used publically, 
+meant to mark results ran with an exeception handler."""
 
 @dataclass(frozen=True, slots=True)
 class _WorkItem(Generic[T]):
     func: Callable[[], Awaitable[T]]
     exc_handler: Callable[[BaseException], None] | None
-    queue: SimpleQueue[T]
+    queue: SimpleQueue[T | MISSING]
 
     async def execute(self) -> None:
         try:
@@ -49,6 +48,8 @@ class _WorkItem(Generic[T]):
         except Exception as e:
             if self.exc_handler:
                 self.exc_handler(e)
+                # mark as work done even though there is no objects.
+                await self.queue.async_put(MISSING)
             else:
                 raise e
 
@@ -56,19 +57,21 @@ class _WorkItem(Generic[T]):
 @dataclass(frozen=True, slots=True)
 class ExecutorResult(Awaitable[list[T]], AsyncIterable[T]):
     """used for waiting upon results to return in different asynchronous
-    fashions."""
+    fashions. It is designed as a hybrid ot be awaited or used in
+    async generator fashion."""
 
-    queue: SimpleQueue[T]
+    queue: SimpleQueue[T | MISSING]
     count: CountdownEvent
     executor: "Executor"
 
     async def __aiter__(self) -> AsyncIterator[T]:
         while not self.executor.is_closed:
             item = await self.queue.async_get()
-            yield item
+            if item is not MISSING:
+                yield item
 
             self.count.down()
-            if bool(self.count):
+            if self.count:
                 break
 
     async def __wait__(self) -> list[T]:
@@ -133,7 +136,7 @@ class Executor:
         return self
 
     @contextmanager
-    def _worker_scope(self) -> Iterator[None]:
+    def _worker_scope(self) -> Generator[None, None, None]:
         """Assistance with Lazy event up/down event functionality."""
         self._workers_done.up()
         try:
@@ -278,7 +281,7 @@ class Executor:
             raise RuntimeError("Executor already closed.")
         cd = CountdownEvent()
         cd.up()
-        queue: SimpleQueue[T] = SimpleQueue()
+        queue: SimpleQueue[T | MISSING] = SimpleQueue()
         self._tg.start_soon(
             self._load_tasks_sync_iter,
             queue,
@@ -376,10 +379,9 @@ class Executor:
         if self.is_closed:
             raise RuntimeError("Executor already closed.")
 
-        queue: SimpleQueue[T] = SimpleQueue()
         cd = CountdownEvent()
         cd.up()
-        queue: SimpleQueue[T] = SimpleQueue()
+        queue: SimpleQueue[T | MISSING] = SimpleQueue()
         self._tg.start_soon(
             self._load_tasks_async_iter,
             queue,
