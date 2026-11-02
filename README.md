@@ -1,7 +1,7 @@
 # Anyio-Executor
 Inspired by the newer [aiolibs-executor](https://github.com/aio-libs/aiolibs-executor) library
 this library provides a asynchronous executor for anyio and has compatability
-with 3.10 and newer versions of python.
+with 3.11 and newer versions of python.
 
 
 ## Installation
@@ -27,6 +27,7 @@ async def fn(i: int):
     print(f"{i} done!")
     return i
 
+
 async def main():
     async with Executor(10) as e:
         items = await e.map(fn, [1, 2, 1, 2, 3])
@@ -36,6 +37,7 @@ async def main():
         # it will also take async for iterations.
         async for i in e.map(fn, [1, 2, 1, 2, 3]):
             print(i)
+
 
 if __name__ == "__main__":
     anyio.run(main)
